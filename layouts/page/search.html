@@ -1,0 +1,116 @@
+{{ define "main" }}
+<div class="post container">
+    <div class="post-header-section">
+        <h1>{{ .Title | markdownify }}</h1>
+    </div>
+
+    <div class="post-content">
+        <p>
+            <input id="search-input" type="search" placeholder="Search posts..." autocomplete="off" style="width: 100%; padding: 0.6rem 0.8rem;">
+        </p>
+        <div id="search-meta" style="opacity: 0.8;"></div>
+        <div id="search-results"></div>
+    </div>
+
+    {{ if .Site.Params.ShowBackToTopButton }}
+        {{ partial "back-to-top.html" . }}
+    {{ end }}
+</div>
+
+<script>
+(() => {
+  const input = document.getElementById("search-input");
+  const meta = document.getElementById("search-meta");
+  const results = document.getElementById("search-results");
+
+  let pages = null;
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function normalize(str) {
+    return String(str || "").toLowerCase();
+  }
+
+  function scorePage(page, query) {
+    const q = normalize(query);
+    if (!q) return 0;
+
+    const title = normalize(page.title);
+    const content = normalize(page.content);
+    const tags = Array.isArray(page.tags) ? page.tags.map(normalize).join(" ") : "";
+
+    if (title.includes(q)) return 3;
+    if (tags.includes(q)) return 2;
+    if (content.includes(q)) return 1;
+    return 0;
+  }
+
+  function render(list, query) {
+    results.innerHTML = "";
+    if (!query) {
+      meta.textContent = "Type to search.";
+      return;
+    }
+    meta.textContent = `${list.length} result(s)`;
+
+    if (!list.length) return;
+
+    const ul = document.createElement("ul");
+    ul.style.listStyle = "none";
+    ul.style.paddingLeft = "0";
+
+    for (const item of list) {
+      const li = document.createElement("li");
+      li.style.marginBottom = "0.75rem";
+      li.innerHTML = `
+        <div>
+          <a href="${escapeHtml(item.permalink)}">${escapeHtml(item.title)}</a>
+          ${item.tags && item.tags.length ? `<div style="opacity:0.75; font-size: 0.95em;">${escapeHtml(item.tags.join(", "))}</div>` : ""}
+        </div>
+      `;
+      ul.appendChild(li);
+    }
+    results.appendChild(ul);
+  }
+
+  async function ensureIndex() {
+    if (pages) return pages;
+    meta.textContent = "Loading index…";
+    const res = await fetch("{{ "index.json" | relURL }}", { cache: "no-store" });
+    pages = await res.json();
+    return pages;
+  }
+
+  let timer = null;
+  input.addEventListener("input", async () => {
+    const query = input.value.trim();
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(async () => {
+      try {
+        const all = await ensureIndex();
+        const ranked = all
+          .map(p => ({ p, s: scorePage(p, query) }))
+          .filter(x => x.s > 0)
+          .sort((a, b) => b.s - a.s || a.p.title.localeCompare(b.p.title))
+          .map(x => x.p)
+          .slice(0, 50);
+        render(ranked, query);
+      } catch (e) {
+        meta.textContent = "Failed to load search index.";
+      }
+    }, 120);
+  });
+
+  // Initial state
+  render([], "");
+})();
+</script>
+{{ end }}
+

@@ -8,10 +8,13 @@ pygmentsStyle = "monokai"
 theme = "gokarna"
 title = "Fugo‘s Blog"
 
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
 [params]
   avatarAltText = "avatar"
   avatarSize = "size-m"
-  avatarURL = "/images/avatar.webp"
+  avatarURL = "/images/page_picture.jpg"
 
   customHeadHTML = """
     <!-- KaTeX -->
@@ -37,8 +40,7 @@ title = "Fugo‘s Blog"
   showBackToTopButton = true
 
   socialIcons = [
-    {name = "github", url = "https://github.com/"},
-    {name = "email", url = "mailto:you@example.com"}
+    {name = "email", url = "mailto:1974183730@qq.com"}
   ]
 
 [menu]
@@ -67,10 +69,16 @@ title = "Fugo‘s Blog"
     weight = 4
 
   [[menu.main]]
+    name = "Search"
+    pre = "<span data-feather='search'></span>"
+    url = "/search/"
+    weight = 5
+
+  [[menu.main]]
     identifier = "rss"
     pre = "<span data-feather='rss'></span>"
     url = "/index.xml"
-    weight = 5
+    weight = 6
 
 [markup]
   [markup.tableOfContents]
