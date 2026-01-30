@@ -34,7 +34,7 @@ title = "Fugo‘s Blog"
     </script>
   """
 
-  description = "记录技术与生活"
+  description = "湘乡一中第一律师"
   footer = "Powered by Hugo • Theme: Gokarna"
   metaKeywords = ["blog", "gokarna", "hugo"]
   showBackToTopButton = true
